@@ -16,7 +16,7 @@
 		"host": "^10.1.14"
 	},
 	"scripts": {
-		"build": "directus-extension build && cp ./package.json ../backend/extensions/directus-extension-assets/ && mv ./dist/ ../backend/extensions/directus-extension-assets/",
+		"build": "directus-extension build",
 		"dev": "directus-extension build -w --no-minify",
 		"link": "directus-extension link"
 	},
