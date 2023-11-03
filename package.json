@@ -1,6 +1,11 @@
 {
-	"name": "directus-extension-assets",
-	"description": "Image resizing according to focal_point setting",
+	"name": "@ameotoko/directus-extension-assets",
+	"description": "Directus extension for resizing images preserving focal_point",
+	"author": {
+		"name": "Andrey Vinichenko"
+	},
+	"homepage": "https://github.com/ameotoko/directus-extension-assets",
+	"bugs": "https://github.com/ameotoko/directus-extension-assets/issues",
 	"icon": "extension",
 	"version": "1.0.0",
 	"keywords": [
@@ -22,5 +27,8 @@
 	},
 	"devDependencies": {
 		"@directus/extensions-sdk": "10.1.14"
+	},
+	"dependencies": {
+		"clone": "^2.1.2"
 	}
 }

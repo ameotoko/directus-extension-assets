@@ -1,26 +1,52 @@
 import { defineHook } from '@directus/extensions-sdk';
+import { updateDatabase } from './database.js';
+import clone from 'clone';
 
-export default defineHook(({ init }, { /*logger, */services: { AssetsService } }) => {
+export default defineHook(({ init }, context) => {
+	init('app.before', () => {
+		updateDatabase(context);
+	});
+
 	init('app.after', () => {
+		const { services, logger, env } = context;
+		const { AssetsService } = services;
+
+		/*
+		 * Directus does not provide extension points ofr hooking into AssetsService,
+		 * so we decorate it instead.
+		 */
 		const getAssetInner = AssetsService.prototype.getAsset;
 
 		AssetsService.prototype.getAsset = async function (id, transformation, range) {
-			// logger.info(`Asset input parameter: ${JSON.stringify(transformation)}`);
+			env.NODE_ENV === 'development' && logger.info(`[extension-assets] requested transformation: ${JSON.stringify(transformation)}`);
 
 			const file = (await this.knex.select('*').from('directus_files').where({ id }).first());
 
 			// if no focal point defined on the image - it's none of our business
 			if (!file?.focal_point) {
+				env.NODE_ENV === 'development' && logger.info(`[extension-assets] Focal point not defined, bypassing`);
+
 				return getAssetInner.call(this, id, transformation, range);
 			}
 
-			let {width, height, transforms} = transformation?.transformationParams;
+			/*
+			 * Clone the parameter to break the reference to SYSTEM_ASSET_ALLOW_LIST,
+			 * otherwise SYSTEM_ASSET_ALLOW_LIST gets updated, which affects all the
+			 * subsequent transformations, until server is restarted.
+			 */
+			const transformationProcessed = clone(transformation);
+
+			let { width, height, transforms } = transformationProcessed.transformationParams;
 
 			// transforms can be null or undefined
 			if (!transforms) {
 				transforms = [];
 			}
 
+			/*
+			 * The magic is in the `position` parameter to Sharp's transformation,
+			 * so we add it as soon as transformations array contains `resize` configuration.
+			 */
 			transforms.forEach((config, i, transforms) => {
 				if (config[0] === 'resize' && !('position' in config[1])) {
 					transforms[i][1].position = file.focal_point;
@@ -34,12 +60,12 @@ export default defineHook(({ init }, { /*logger, */services: { AssetsService } }
 					position: file.focal_point
 				}]);
 
-				transformation.transformationParams.transforms = transforms;
+				transformationProcessed.transformationParams.transforms = transforms;
 			}
 
-			// logger.info(`Asset processed parameter: ${JSON.stringify(transformation)}`);
+			env.NODE_ENV === 'development' && logger.info(`[extension-assets] processed transformation: ${JSON.stringify(transformationProcessed)}`);
 
-			return getAssetInner.call(this, id, transformation, range);
+			return getAssetInner.call(this, id, transformationProcessed, range);
 		};
 	});
 });
