@@ -11,14 +11,23 @@
 	"keywords": [
 		"directus",
 		"directus-extension",
-		"directus-custom-hook"
+		"directus-custom-bundle"
 	],
 	"type": "module",
 	"directus:extension": {
-		"type": "hook",
-		"path": "dist/index.js",
-		"source": "src/index.js",
-		"host": "^10.1.14"
+		"host": "^10.1.14",
+		"type": "bundle",
+		"path": {
+            "app": "dist/app.js",
+            "api": "dist/api.js"
+        },
+		"entries": [
+            {
+                "type": "hook",
+                "name": "ameotoko-assets-hook",
+                "source": "src/hook/index.js"
+            }
+        ]
 	},
 	"scripts": {
 		"build": "directus-extension build",
