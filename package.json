@@ -1,43 +1,43 @@
 {
-	"name": "@ameotoko/directus-extension-assets",
-	"description": "Directus extension for resizing images preserving focal_point",
-	"author": {
-		"name": "Andrey Vinichenko"
-	},
-	"homepage": "https://github.com/ameotoko/directus-extension-assets",
-	"bugs": "https://github.com/ameotoko/directus-extension-assets/issues",
-	"icon": "extension",
-	"version": "1.0.0",
-	"keywords": [
-		"directus",
-		"directus-extension",
-		"directus-custom-bundle"
-	],
-	"type": "module",
-	"directus:extension": {
-		"host": "^10.1.14",
-		"type": "bundle",
-		"path": {
+    "name": "@ameotoko/directus-extension-assets",
+    "description": "Directus extension for resizing images preserving focal_point",
+    "author": {
+        "name": "Andrey Vinichenko"
+    },
+    "homepage": "https://github.com/ameotoko/directus-extension-assets",
+    "bugs": "https://github.com/ameotoko/directus-extension-assets/issues",
+    "icon": "extension",
+    "version": "1.0.0",
+    "keywords": [
+        "directus",
+        "directus-extension",
+        "directus-custom-bundle"
+    ],
+    "type": "module",
+    "directus:extension": {
+        "host": "^10.1.14",
+        "type": "bundle",
+        "path": {
             "app": "dist/app.js",
             "api": "dist/api.js"
         },
-		"entries": [
+        "entries": [
             {
                 "type": "hook",
                 "name": "ameotoko-assets-hook",
                 "source": "src/hook/index.js"
             }
         ]
-	},
-	"scripts": {
-		"build": "directus-extension build",
-		"dev": "directus-extension build -w --no-minify",
-		"link": "directus-extension link"
-	},
-	"devDependencies": {
-		"@directus/extensions-sdk": "10.1.14"
-	},
-	"dependencies": {
-		"clone": "^2.1.2"
-	}
+    },
+    "scripts": {
+        "build": "directus-extension build",
+        "dev": "directus-extension build -w --no-minify",
+        "link": "directus-extension link"
+    },
+    "devDependencies": {
+        "@directus/extensions-sdk": "10.1.14",
+    },
+    "dependencies": {
+        "clone": "^2.1.2"
+    }
 }
