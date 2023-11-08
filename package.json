@@ -35,7 +35,11 @@
         "link": "directus-extension link"
     },
     "devDependencies": {
-        "@directus/extensions-sdk": "10.1.14",
+        "@directus/api": "^14.0.2",
+        "@directus/extensions": "^0.1.1",
+        "@directus/extensions-sdk": "^10.1.14",
+        "@types/clone": "^2.1.4",
+        "typescript": "^5.2.2"
     },
     "dependencies": {
         "clone": "^2.1.2"

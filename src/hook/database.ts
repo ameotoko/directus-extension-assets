@@ -1,4 +1,6 @@
-export const updateDatabase = (context) => {
+import { HookExtensionContext } from "@directus/extensions";
+
+export const updateDatabase = (context: HookExtensionContext) => {
     const { database, getSchema, services, logger, env } = context;
 
     database.schema
@@ -16,10 +18,8 @@ export const updateDatabase = (context) => {
 
             env.NODE_ENV === 'development' && logger.info('[extension-assets] Database column created');
 
-            const { ItemsService } = services;
-
             const schema = await getSchema();
-            const items = new ItemsService('directus_fields', { schema });
+            const items = new services.ItemsService('directus_fields', { schema });
 
             await items.createOne({
                 collection: 'directus_files',

@@ -1,4 +1,7 @@
 import { defineHook } from '@directus/extensions-sdk';
+import { File } from '@directus/types';
+import { Transformation, TransformationSet } from '@directus/api/dist/types';
+import { Range } from '@directus/storage';
 import { updateDatabase } from './database.js';
 import clone from 'clone';
 
@@ -17,10 +20,10 @@ export default defineHook(({ init }, context) => {
 		 */
 		const getAssetInner = AssetsService.prototype.getAsset;
 
-		AssetsService.prototype.getAsset = async function (id, transformation, range) {
+		AssetsService.prototype.getAsset = async function (id: string, transformation?: TransformationSet, range?: Range) {
 			env.NODE_ENV === 'development' && logger.info(`[extension-assets] requested transformation: ${JSON.stringify(transformation)}`);
 
-			const file = (await this.knex.select('*').from('directus_files').where({ id }).first());
+			const file: File & { focal_point: string } = (await this.knex.select('*').from('directus_files').where({ id }).first());
 
 			// if no focal point defined on the image - it's none of our business
 			if (!file?.focal_point) {
@@ -47,13 +50,13 @@ export default defineHook(({ init }, context) => {
 			 * The magic is in the `position` parameter to Sharp's transformation,
 			 * so we add it as soon as transformations array contains `resize` configuration.
 			 */
-			transforms.forEach((config, i, transforms) => {
+			transforms.forEach((config: Transformation, i: number, transforms: Transformation[] | []) => {
 				if (config[0] === 'resize' && !('position' in config[1])) {
 					transforms[i][1].position = file.focal_point;
 				}
 			});
 
-			if (width || height) {
+			if (transformationProcessed && (width || height)) {
 				transforms.push(['resize', {
 					width: width ? Number(width) : undefined,
 					height: height ? Number(height) : undefined,
