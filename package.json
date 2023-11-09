@@ -26,6 +26,11 @@
                 "type": "hook",
                 "name": "ameotoko-assets-hook",
                 "source": "src/hook/index.js"
+            },
+            {
+                "type": "interface",
+                "name": "ameotoko-assets-interface",
+                "source": "src/interface/index.ts"
             }
         ]
     },
@@ -39,9 +44,11 @@
         "@directus/extensions": "^0.1.1",
         "@directus/extensions-sdk": "^10.1.14",
         "@types/clone": "^2.1.4",
-        "typescript": "^5.2.2"
+        "typescript": "^5.2.2",
+        "vue": "^3.3.8"
     },
     "dependencies": {
-        "clone": "^2.1.2"
+        "clone": "^2.1.2",
+        "cropperjs": "^1.6.1"
     }
 }
