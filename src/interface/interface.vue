@@ -59,22 +59,22 @@ function resetCrop() {
 
 function pixelsToFractions(cropArea: Cropper.SetDataOptions) {
   const data: Cropper.SetDataOptions = {
-    x: Math.max(0, Math.min(1, cropArea.x / image.value?.width)),
-    y: Math.max(0, Math.min(1, cropArea.y / image.value?.height))
+    x: Math.max(0, Math.min(1, cropArea.x / cropper.value?.getImageData().naturalWidth)),
+    y: Math.max(0, Math.min(1, cropArea.y / cropper.value?.getImageData().naturalHeight))
   };
 
-  data.width = Math.min(1 - data.x, cropArea.width / image.value?.width);
-  data.height = Math.min(1 - data.y, cropArea.height / image.value?.height);
+  data.width = Math.min(1 - data.x, cropArea.width / cropper.value?.getImageData().naturalWidth);
+  data.height = Math.min(1 - data.y, cropArea.height / cropper.value?.getImageData().naturalHeight);
 
   return data;
 }
 
 function fractionsToPixels(cropArea: Cropper.SetDataOptions) {
   const data: Cropper.SetDataOptions = {
-    x: Math.round(cropArea.x * image.value?.width),
-    y: Math.round(cropArea.y * image.value?.height),
-    width: Math.round(cropArea.width * image.value?.width),
-    height: Math.round(cropArea.height * image.value?.height),
+    x: Math.round(cropArea.x * cropper.value?.getImageData().naturalWidth),
+    y: Math.round(cropArea.y * cropper.value?.getImageData().naturalHeight),
+    width: Math.round(cropArea.width * cropper.value?.getImageData().naturalWidth),
+    height: Math.round(cropArea.height * cropper.value?.getImageData().naturalHeight),
   };
 
   return data;
