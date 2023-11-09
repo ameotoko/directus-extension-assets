@@ -19,19 +19,21 @@ onMounted(() => {
 
   // Give img time to load its base64 src
   setTimeout(() => {
-    image.value = document.querySelector('.file-preview-replace .image img') as HTMLImageElement;
-    cropper.value = new Cropper(image.value, {
-      modal: false,
-      highlight: false,
-      autoCrop: !!props.value,
-      rotatable: false,
-      zoomable: false,
-      zoomOnWheel: false,
-      toggleDragModeOnDblclick: false,
+    image.value = document.querySelector('.file-preview-replace .image img') as HTMLImageElement | null;
 
-      ready: onCropperReady,
-      cropend: onCropEnd
-    });
+    try {
+      cropper.value = new Cropper(image.value, {
+        modal: false,
+        highlight: false,
+        autoCrop: !!props.value,
+        rotatable: false,
+        zoomable: false,
+        zoomOnWheel: false,
+        toggleDragModeOnDblclick: false,
+        ready: onCropperReady,
+        cropend: onCropEnd
+      });
+    } catch (e) {}
   }, 500);
 });
 
