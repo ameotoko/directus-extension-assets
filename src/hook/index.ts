@@ -1,35 +1,66 @@
 import { defineHook } from '@directus/extensions-sdk';
 import { File } from '@directus/types';
-import { Transformation, TransformationSet } from '@directus/api/dist/types';
+import { TransformationSet } from '@directus/api/dist/types';
+import { AssetsService } from '@directus/api/services';
 import { Range } from '@directus/storage';
 import { updateDatabase } from './database.js';
 import clone from 'clone';
+import { ResizeOptions } from 'sharp';
+import { calculateCrop, fractionsToPixels } from './resizeCalculator';
 
 export default defineHook(({ init }, context) => {
-	init('app.before', () => {
-		updateDatabase(context);
-	});
+	// init('app.before', () => {
+	// 	updateDatabase(context);
+	// });
 
 	init('app.after', () => {
 		const { services, logger, env } = context;
-		const { AssetsService } = services;
+		const assets: AssetsService = services.AssetsService;
+
+    const dev = env.NODE_ENV === 'development';
 
 		/*
-		 * Directus does not provide extension points ofr hooking into AssetsService,
+		 * Directus does not provide extension points for hooking into AssetsService,
 		 * so we decorate it instead.
 		 */
-		const getAssetInner = AssetsService.prototype.getAsset;
+		const getAssetInner = assets.prototype.getAsset;
 
-		AssetsService.prototype.getAsset = async function (id: string, transformation?: TransformationSet, range?: Range) {
-			env.NODE_ENV === 'development' && logger.info(`[extension-assets] requested transformation: ${JSON.stringify(transformation)}`);
+    /**
+     * Our task is to override `transformation.transformationParams.transforms`, which is a sequence of Sharp method calls.
+     *
+     * @param id              File UUID
+     * @param transformation  Object with `transformationParams` property whose keys are allowed URL query params
+     *                        (see https://docs.directus.io/reference/files.html#custom-transformations).
+     *                        Each query param will be expanded into Sharp's method later by inner service.
+     * @param range
+     */
+		assets.prototype.getAsset = async function (id: string, transformation?: TransformationSet, range?: Range) {
+      const bypass = (message: string) => {
+        dev && logger.info(`[extension-assets] ${message}`);
 
-			const file: File & { focal_point: string } = (await this.knex.select('*').from('directus_files').where({ id }).first());
+        return getAssetInner.call(this, id, transformation, range);
+      }
 
-			// if no focal point defined on the image - it's none of our business
-			if (!file?.focal_point) {
-				env.NODE_ENV === 'development' && logger.info(`[extension-assets] Focal point not defined, bypassing`);
+      if (!transformation) {
+				return bypass('No transformation requested, bypassing');
+      }
 
-				return getAssetInner.call(this, id, transformation, range);
+			dev && logger.info(`[extension-assets] requested transformation: ${JSON.stringify(transformation)}`);
+
+      const file: File & { important_part: string } | undefined = (
+        await this.knex
+          .select('*')
+          .from('directus_files')
+          .where({ id })
+          .first()
+      );
+
+      if (!file) {
+				return bypass('File not found, bypassing');
+      }
+
+			if (file.important_part === null) {
+				return bypass('Important part is not defined, bypassing');
 			}
 
 			/*
@@ -39,34 +70,53 @@ export default defineHook(({ init }, context) => {
 			 */
 			const transformationProcessed = clone(transformation);
 
-			let { width, height, transforms } = transformationProcessed.transformationParams;
+			const { width, height, transforms = [] } = transformationProcessed.transformationParams;
+      const resizeTransform = transforms.find(config => config[0] === 'resize');
 
-			// transforms can be null or undefined
-			if (!transforms) {
-				transforms = [];
-			}
+      if (!width && !height && !resizeTransform) {
+        return bypass('Transformation set does not include resizing, bypassing');
+      }
 
-			/*
-			 * The magic is in the `position` parameter to Sharp's transformation,
-			 * so we add it as soon as transformations array contains `resize` configuration.
-			 */
-			transforms.forEach((config: Transformation, i: number, transforms: Transformation[] | []) => {
-				if (config[0] === 'resize' && !('position' in config[1])) {
-					transforms[i][1].position = file.focal_point;
-				}
-			});
+      let cropWidth: number = 0,
+        cropHeight: number = 0;
 
-			if (transformationProcessed && (width || height)) {
-				transforms.push(['resize', {
-					width: width ? Number(width) : undefined,
-					height: height ? Number(height) : undefined,
-					position: file.focal_point
-				}]);
+      if (resizeTransform) {
+        // if resize in `transforms` - take width and height from there
+        const resizeParams: ResizeOptions = resizeTransform[1];
 
-				transformationProcessed.transformationParams.transforms = transforms;
-			}
+        if (resizeParams.width && resizeParams.height) {
+          cropWidth = resizeParams.width;
+          cropHeight = resizeParams.height;
+        }
+      }
 
-			env.NODE_ENV === 'development' && logger.info(`[extension-assets] processed transformation: ${JSON.stringify(transformationProcessed)}`);
+      // query parameters override transform settings
+      if (width && height) {
+        cropWidth = width;
+        cropHeight = height;
+      }
+
+      if (!cropWidth || !cropHeight) {
+        return bypass('Both "width" and "height" must be explicitly provided to use important part.');
+      }
+
+      // get values and remove width and height
+      const importantPart = fractionsToPixels(
+        { width: file.width!, height: file.height! },
+        JSON.parse(file.important_part)
+      );
+
+      const { resizeConfig, cropConfig } = calculateCrop(
+        [cropWidth, cropHeight],
+        { width: file.width!, height: file.height! },
+        importantPart
+      );
+
+      transforms.push(['resize', resizeConfig], ['extract', cropConfig]);
+
+      transformationProcessed.transformationParams.transforms = transforms;
+
+			dev && logger.info(`[extension-assets] processed transformation: ${JSON.stringify(transformationProcessed)}`);
 
 			return getAssetInner.call(this, id, transformationProcessed, range);
 		};

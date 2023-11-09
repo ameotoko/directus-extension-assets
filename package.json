@@ -49,6 +49,7 @@
     },
     "dependencies": {
         "clone": "^2.1.2",
-        "cropperjs": "^1.6.1"
+        "cropperjs": "^1.6.1",
+        "sharp": "^0.32.6"
     }
 }
