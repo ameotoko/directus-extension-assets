@@ -9,9 +9,9 @@ import { ResizeOptions } from 'sharp';
 import { calculateCrop, fractionsToPixels } from './resizeCalculator';
 
 export default defineHook(({ init }, context) => {
-	// init('app.before', () => {
-	// 	updateDatabase(context);
-	// });
+	init('app.before', () => {
+		updateDatabase(context);
+	});
 
 	init('app.after', () => {
 		const { services, logger, env } = context;

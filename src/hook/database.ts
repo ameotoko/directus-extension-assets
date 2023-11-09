@@ -1,10 +1,29 @@
-import { HookExtensionContext } from "@directus/extensions";
+import { HookExtensionContext } from '@directus/extensions';
 
 export const updateDatabase = (context: HookExtensionContext) => {
   const { database, getSchema, services, logger, env } = context;
 
+  // drop legacy column from directus_files
   database.schema
     .hasColumn('directus_files', 'focal_point')
+    .then(async columnExists => {
+      if (columnExists) {
+        await database.schema.alterTable(
+          'directus_files',
+          table => table.dropColumn('focal_point')
+        );
+
+        return;
+      }
+    })
+  ;
+
+  // delete legacy field from file item view
+  database('directus_fields').where('field', 'focal_point').del();
+
+  // create important_part column
+  database.schema
+    .hasColumn('directus_files', 'important_part')
     .then(async columnExists => {
       if (columnExists) {
         env.NODE_ENV === 'development' && logger.info('[extension-assets] Database is up-to-date');
@@ -12,9 +31,10 @@ export const updateDatabase = (context: HookExtensionContext) => {
         return;
       }
 
-      await database.schema.alterTable('directus_files', tableBuilder => {
-        tableBuilder.string('focal_point', 16);
-      });
+      await database.schema.alterTable(
+        'directus_files',
+        table => table.json('important_part')
+      );
 
       env.NODE_ENV === 'development' && logger.info('[extension-assets] Database column created');
 
@@ -23,29 +43,15 @@ export const updateDatabase = (context: HookExtensionContext) => {
 
       await items.createOne({
         collection: 'directus_files',
-        field: 'focal_point',
-        interface: 'select-dropdown',
-        width: 'half',
+        field: 'important_part',
+        interface: 'ameotoko-important-part',
+        special: 'cast-json',
+        width: 'full',
 
-        options: {
-          icon: 'photo_size_select_small',
-          choices: [
-            { text: 'Top', value: 'top' },
-            { text: 'Right Top', value: 'right top' },
-            { text: 'Right', value: 'right' },
-            { text: 'Right Bottom', value: 'right bottom' },
-            { text: 'Bottom', value: 'bottom' },
-            { text: 'Left Bottom', value: 'left bottom' },
-            { text: 'Left', value: 'left' },
-            { text: 'Left Top', value: 'left top' }
-          ],
-          allowNone: true
-        },
-
-        // hide the field for any MIME-type except "image/*"
+        // disable for all MIME-types except "image/*"
         conditions: [
           {
-            name: "Show only for images",
+            name: 'Show only for images',
             hidden: true,
             options: {
               allowNone: false,
