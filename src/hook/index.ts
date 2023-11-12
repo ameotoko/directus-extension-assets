@@ -70,7 +70,9 @@ export default defineHook(({ init }, context) => {
 			 */
 			const transformationProcessed = clone(transformation);
 
-			const { width, height, transforms = [] } = transformationProcessed.transformationParams;
+			const { width, height } = transformationProcessed.transformationParams;
+      const transforms = transformationProcessed.transformationParams.transforms || [];
+
       const resizeTransform = transforms.find(config => config[0] === 'resize');
 
       if (!width && !height && !resizeTransform) {
