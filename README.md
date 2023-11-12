@@ -1,7 +1,8 @@
 # Directus Assets extension
 
-Smarter image resizing in [Directus][1].
+Smarter image resizing for [Directus][1].
 
+This is a port of the "Important part of an image" feature from [Contao CMS][6].
 
 ## Installation
 
@@ -11,36 +12,35 @@ The extension is available as NPM package:
 npm install @ameotoko/directus-extension-assets
 ```
 
-Then copy or link the package folder to `extensions/` directory
-of your Directus instance.
-
 
 ## What does it do?
 
-When the extension is enabled in Directus, it adds a `Focal Point`
-field in your File Library:
+The extension allows you to mark an "important part" of any image in your
+File Library. The selected area will always be preserved when image is
+automatically [cropped][2] by Directus, i.e. when both new width and new height is set,
+and the resulting aspect ratio differs from the original aspect ratio.
 
-![](docs/field.png)
+**Original images:**
 
-The field is added only for images (MIME-type `image/*`).
+<img src="docs/originals.png" width="600">
 
-Using the `Focal Point` field, you can set an important part (a
-"focal point") for each image in your file library individually.
+**Default crop by Directus:**
 
-If a focal point is set for an image, it will be preserved whenever
-the image is [cropped][2].
+<img src="docs/default-crop.png" width="600">
 
-Below is an example, how an image is processed with and without
-the extension.
+**Smart crop by the extension:**
 
-- original image:
+<img src="docs/smart-crop.png" width="600">
 
-![](docs/original.jpg)
 
-- default thumbnail, and thumbnail with `focal_point` set to `Top`:
+## Usage
 
-![](docs/thumbnails.jpg)
+To enable smart cropping for an image, go to image editing screen and mark the
+important part of the image by mouse-dragging across the image preview:
 
+<img src="docs/usage.png" width="300">
+
+To reset the selection, double-click inside the blue rectangle.
 
 ## Use cases
 
@@ -76,8 +76,21 @@ MDN article:
   alt="Elva dressed as a fairy" />
 ```
 
+## Previous version
+
+This extension previously provided simpler functionality, where `focal_point` of
+an image could be set by a dropdown with 8 predefined options: "Top", "Left" etc.
+
+If you need to use this functionality in your project, install the previous version
+of the extension:
+
+```bash
+npm install @ameotoko/directus-extension-assets@1.0.0
+```
+
 [1]: https://directus.io
 [2]: https://docs.directus.io/reference/files.html#requesting-a-thumbnail
 [3]: https://docs.directus.io/user-guide/settings/project-settings.html#files-storage
 [4]: https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images
 [5]: https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images#resolution_switching_different_sizes
+[6]: https://contao.org
