@@ -117,6 +117,8 @@ export default defineHook(({ init }, context) => {
       transforms.push(['resize', resizeConfig], ['extract', cropConfig]);
 
       transformationProcessed.transformationParams.transforms = transforms;
+      delete transformationProcessed.transformationParams.width;
+      delete transformationProcessed.transformationParams.height;
 
 			dev && logger.info(`[extension-assets] processed transformation: ${JSON.stringify(transformationProcessed)}`);
 
